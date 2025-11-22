@@ -22,14 +22,14 @@ data "aws_iam_policy_document" "backup_upload_policy" {
   }
 
 }
-
-resource "aws_iam_user_policy" "backup_upload_policy" {
-  for_each = aws_s3_bucket.backups
-
-  user   = aws_iam_user.on_premises_user[each.key].id
-  name   = "${each.value.bucket}-upload-policy"
-  policy = data.aws_iam_policy_document.backup_upload_policy[each.key].json
-}
+#
+# resource "aws_iam_user_policy" "backup_upload_policy" {
+#   for_each = aws_s3_bucket.backups
+#
+#   user   = aws_iam_user.on_premises_user[each.key].id
+#   name   = "${each.value.bucket}-upload-policy"
+#   policy = data.aws_iam_policy_document.backup_upload_policy[each.key].json
+# }
 
 resource "aws_s3_bucket_lifecycle_configuration" "backups" {
   for_each = aws_s3_bucket.backups

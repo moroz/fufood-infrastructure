@@ -1,5 +1,5 @@
 locals {
-  env         = get_env("ENV", "staging")
+  env       = get_env("ENV", "production")
   secrets   = yamldecode(file("./vars/vars.yml"))
 }
 
@@ -34,6 +34,12 @@ terraform {
 provider "aws" {
   region = "${local.secrets.aws_region}"
   profile = "${local.secrets.aws_profile}"
+}
+
+provider "aws" {
+  region = "${local.secrets.aws_region}"
+  profile = "${local.secrets.aws_profile}"
+  alias = "tokyo"
 }
 EOF
 }

@@ -8,6 +8,12 @@ terraform {
 }
 
 provider "aws" {
-  region  = "ap-east-2"
+  region  = "ap-northeast-1"
   profile = "fufood"
+}
+
+provider "aws" {
+  region  = "ap-northeast-1"
+  profile = "fufood"
+  alias   = "tokyo"
 }

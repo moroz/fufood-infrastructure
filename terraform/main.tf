@@ -21,7 +21,7 @@ module "pipeline" {
   for_each = toset(var.environments)
 
   source    = "./modules/pipeline"
-  base_name = "${var.project_name}-docker"
+  base_name = "${var.project_name}-${each.key}-docker"
 
   github_connection_arn = aws_codestarconnections_connection.github.arn
   git_repo_name         = "jocelyn1110/FuFood"
@@ -30,14 +30,10 @@ module "pipeline" {
   aws_region            = var.aws_region
   codebuild_image       = "aws/codebuild/standard:7.0"
   codedeploy_app_name   = aws_codedeploy_app.server.name
+  is_arm                = true
 
   additional_build_env_vars = {
     AWS_ACCOUNT_ID = data.aws_caller_identity.account.account_id
     ENV            = each.key
-  }
-
-  build_secrets = {
-    DOCKERHUB_USERNAME = "${data.aws_secretsmanager_secret.dockerhub_secret.arn}:username::"
-    DOCKERHUB_PASSWORD = "${data.aws_secretsmanager_secret.dockerhub_secret.arn}:password::"
   }
 }
