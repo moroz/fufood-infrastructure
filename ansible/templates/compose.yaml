@@ -1,0 +1,49 @@
+services:
+  pg:
+    image: postgres:18-alpine
+    ports:
+      - 5432:5432
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: {{ database_name }}
+      POSTGRES_USER: {{ database_user }}
+      POSTGRES_PASSWORD: {{ vault_database_password }}
+    volumes:
+      - db:/var/lib/postgresql/data
+      - "{{ db_dump_folder }}:/var/db_dumps"
+
+  backend:
+    image: "{{ ecr_repository_url }}/{{ project_name }}-backend:{{ env }}"
+    restart: unless-stopped
+    depends_on:
+      - pg
+
+    environment:
+      - DATABASE_URL
+      - TZ
+      - SECRET_KEY_BASE
+      - PORT
+
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: {{ aws_region }}
+        awslogs-group: /logs/{{ project_name }}/{{ env }}/backend
+
+  caddy:
+    image: caddy:alpine
+    restart: unless-stopped
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - {{ project_root }}/Caddyfile:/etc/caddy/Caddyfile
+
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+
+volumes:
+  db: {}
+  caddy_data: {}
+  caddy_config: {}

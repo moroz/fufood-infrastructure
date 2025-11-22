@@ -1,0 +1,21 @@
+user_name: deploy
+deployer_user: deploy
+app_user: app
+project_name: "fufood"
+
+project_root: "/usr/local/lib/{{ project_name }}"
+db_dump_folder: "{{ project_root }}/db"
+docker_compose_file_path: "{{ project_root }}/compose.yaml"
+app_port: 8080
+
+aws_account_id: 504508176721
+aws_region: ap-northeast-1
+ecr_repository_url: "{{ aws_account_id }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+
+env: "{{ group_names.0 }}"
+database_name: "{{ project_name }}_{{ env }}"
+database_user: app
+database_password: "{{ vault_database_password }}"
+database_port: 5432
+
+database_url: "postgres://postgres:postgres@pg:{{ database_port }}/{{ database_name }}?sslmode=disable"

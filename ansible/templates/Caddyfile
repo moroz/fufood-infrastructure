@@ -1,0 +1,4 @@
+{{ app_domain }} {
+  encode
+  reverse_proxy backend:{{ app_port }}
+}

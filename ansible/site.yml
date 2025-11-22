@@ -1,0 +1,153 @@
+---
+- name: Create users
+  hosts: all
+  remote_user: ubuntu
+  become: true
+  tags: users
+
+  tasks:
+    - name: Ensure docker group exists
+      group:
+        name: docker
+
+    - name: Create deployer user
+      user:
+        name: "{{ deployer_user }}"
+        shell: "/usr/bin/bash"
+        groups:
+          - sudo
+          - docker
+
+    - name: Create app user
+      user:
+        shell: "/usr/bin/bash"
+        name: "{{ app_user }}"
+
+    - name: Ensure target directory for SSH keys exists for deployer user
+      file:
+        name: "{{ item }}"
+        owner: "{{ deployer_user }}"
+        state: directory
+      with_items:
+        - "/home/{{ deployer_user }}/.ssh"
+
+    - name: Copy deployer keys from github to deployer's home 
+      get_url:
+        url: "https://github.com/moroz.keys"
+        dest: "/home/{{ deployer_user }}/.ssh/authorized_keys"
+        mode: "0600"
+        owner: "{{ deployer_user }}"
+
+    - name: Allow sudo group to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%sudo'
+        line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+- name: Install service dependencies
+  hosts: all
+  remote_user: "{{ deployer_user }}"
+  become: true
+  tags: deps
+
+  tasks:
+    - name: Ensure pip3 for python
+      apt:
+        name:
+          - unzip
+          - python3-pip
+
+- name: Install awscli
+  hosts: all
+  remote_user: "{{ deployer_user }}"
+  become: true
+  tags: awscli
+
+  roles:
+    - bestiancode.install_awscli_v2
+
+- name: Install docker
+  hosts: all
+  remote_user: "{{ deployer_user }}"
+  become: true
+  tags: docker
+
+  roles:
+    - geerlingguy.docker
+
+- name: Install codedeploy-agent
+  hosts: all
+  remote_user: "{{ user_name }}"
+  become: true
+  tags: codedeploy
+
+  roles:
+    - diodonfrost.amazon_codedeploy
+
+- name: Folders
+  hosts: all
+  remote_user: "{{ user_name }}"
+  become: true
+  tags: folders
+
+  tasks:
+    - name: Ensure application directory exists
+      file:
+        name: "{{ project_root }}"
+        owner: "{{ deployer_user }}"
+        group: "{{ app_user }}"
+        mode: "0755"
+        state: directory
+
+- name: Set up Docker services
+  hosts: all
+  remote_user: "{{ deployer_user }}"
+  become: true
+  tags: services
+
+  tasks:
+    - name: Ensure an environment file exists
+      notify:
+        - Restart docker compose services
+      template:
+        src: env.j2
+        dest: "{{ project_root }}/.env"
+        owner: "{{ deployer_user }}"
+        group: docker
+        mode: '0640'
+
+    - name: Ensure a Caddyfile exists
+      notify:
+        - Restart docker compose services
+      template:
+        src: Caddyfile
+        dest: "{{ project_root }}/Caddyfile"
+        owner: "{{ deployer_user }}"
+        group: docker
+        mode: '0640'
+
+    - name: Ensure a compose.yaml file exists
+      notify:
+        - Restart docker compose services
+      template:
+        src: compose.yaml
+        dest: "{{ docker_compose_file_path }}"
+        owner: "{{ deployer_user }}"
+        group: docker
+        mode: '0640'
+
+    - name: Log in to ECR
+      ignore_errors: true
+      include_tasks: tasks/docker-login.yml
+
+  handlers:
+    - name: Restart docker compose services
+      community.docker.docker_compose_v2:
+        project_src: "{{ project_root }}"
+        state: present
+        pull: always
+
+      ignore_errors: true
+

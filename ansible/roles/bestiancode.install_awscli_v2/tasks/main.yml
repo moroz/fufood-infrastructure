@@ -1,0 +1,49 @@
+---
+
+- name: Check if AWS CLI is already installed
+  stat:
+    path: /usr/local/bin/aws
+  register: aws_cli_exists
+
+- name: Gather system architecture facts
+  set_fact:
+    aws_cli_arch: "{{ 'aarch64' if ansible_architecture == 'aarch64' or ansible_architecture == 'arm64' else 'x86_64' }}"
+  when: not aws_cli_exists.stat.exists
+
+- name: Set AWS CLI download URL based on architecture
+  set_fact:
+    aws_cli_url: "https://awscli.amazonaws.com/awscli-exe-linux-{{ aws_cli_arch }}.zip"
+  when: not aws_cli_exists.stat.exists
+
+- name: Download AWS CLI v2 bundle
+  get_url:
+    url: "{{ aws_cli_url }}"
+    dest: "/tmp/awscliv2.zip"
+    mode: '0644'
+  become: true
+  when: not aws_cli_exists.stat.exists
+
+- name: Unarchive AWS CLI v2 bundle
+  unarchive:
+    src: "/tmp/awscliv2.zip"
+    dest: "/tmp"
+    remote_src: yes
+  become: true
+  when: not aws_cli_exists.stat.exists
+
+- name: Install AWS CLI v2
+  command: "/tmp/aws/install --update"
+  become: true
+  when: not aws_cli_exists.stat.exists
+
+- name: Clean up AWS CLI installer directory
+  file:
+    path: "/tmp/aws"
+    state: absent
+  become: true
+
+- name: Remove AWS CLI bundle zip file
+  file:
+    path: "/tmp/awscliv2.zip"
+    state: absent
+  become: true

@@ -24,6 +24,26 @@ data "aws_ami" "debian_trixie_arm" {
   owners = ["136693071363"] # Debian official
 }
 
+data "aws_ami" "ubuntu_24_04" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-arm64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["arm64"]
+  }
+
+  owners = ["099720109477"] # Canonical
+}
 
 module "server" {
   for_each = toset(var.environments)
@@ -32,7 +52,7 @@ module "server" {
   source       = "./modules/server"
   namespace    = "${var.project_name}-${each.key}"
   key_name     = "${var.project_name}-karol"
-  server_ami   = data.aws_ami.debian_trixie_arm.id
+  server_ami   = data.aws_ami.ubuntu_24_04.id
   project_name = var.project_name
 
   providers = {
