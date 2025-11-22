@@ -1,0 +1,3 @@
+locals {
+  pipelines = ["backend"]
+}
