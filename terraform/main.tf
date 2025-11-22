@@ -1,9 +1,5 @@
 data "aws_caller_identity" "account" {}
 
-data "aws_secretsmanager_secret" "dockerhub_secret" {
-  name = "medic-dockerhub"
-}
-
 resource "aws_codestarconnections_connection" "github" {
   name          = "${var.project_name}-github"
   provider_type = "GitHub"
@@ -27,14 +23,13 @@ module "pipeline" {
   source    = "./modules/pipeline"
   base_name = "${var.project_name}-docker"
 
-  github_connection_arn    = aws_codestarconnections_connection.github.arn
-  git_repo_name            = "moroz/homeosapiens-go"
-  git_branch               = each.key
-  deployment_group_name    = "${var.project_name}-${each.key}"
-  aws_region               = var.aws_region
-  codebuild_image          = "aws/codebuild/standard:7.0"
-  codedeploy_app_name      = aws_codedeploy_app.server.name
-  dockerhub_credential_arn = data.aws_secretsmanager_secret.dockerhub_secret.arn
+  github_connection_arn = aws_codestarconnections_connection.github.arn
+  git_repo_name         = "jocelyn1110/FuFood"
+  git_branch            = each.key
+  deployment_group_name = "${var.project_name}-${each.key}"
+  aws_region            = var.aws_region
+  codebuild_image       = "aws/codebuild/standard:7.0"
+  codedeploy_app_name   = aws_codedeploy_app.server.name
 
   additional_build_env_vars = {
     AWS_ACCOUNT_ID = data.aws_caller_identity.account.account_id
@@ -45,11 +40,4 @@ module "pipeline" {
     DOCKERHUB_USERNAME = "${data.aws_secretsmanager_secret.dockerhub_secret.arn}:username::"
     DOCKERHUB_PASSWORD = "${data.aws_secretsmanager_secret.dockerhub_secret.arn}:password::"
   }
-}
-
-module "assets_cdn" {
-  for_each = toset(var.environments)
-
-  source      = "./modules/static-cdn"
-  bucket_name = "${var.project_name}-${each.key}-assets"
 }

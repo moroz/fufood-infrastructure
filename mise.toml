@@ -5,3 +5,5 @@ STATE_BUCKET = "terraform-homeosapiens-staging-ap-northeast-1"
 
 [tools]
 go = "1.25.3"
+terraform = "1.14.0"
+terragrunt = "0.93.10"

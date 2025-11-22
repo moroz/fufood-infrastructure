@@ -8,6 +8,6 @@ terraform {
 }
 
 provider "aws" {
-  region  = "ap-northeast-1"
-  profile = "medic"
+  region  = "ap-east-2"
+  profile = "fufood"
 }
