@@ -19,9 +19,9 @@ services:
       - pg
 
     environment:
-      - DATABASE_URL
-      - TZ
-      - SECRET_KEY_BASE
+      - LineOAuth__ClientId
+      - LineOAuth__ClientSecret
+      - LineOAuth__CallbackUrl
       - PORT
 
     logging:

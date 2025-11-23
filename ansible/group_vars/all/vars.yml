@@ -15,7 +15,6 @@ ecr_repository_url: "{{ aws_account_id }}.dkr.ecr.{{ aws_region }}.amazonaws.com
 env: "{{ group_names.0 }}"
 database_name: "{{ project_name }}_{{ env }}"
 database_user: app
-database_password: "{{ vault_database_password }}"
 database_port: 5432
 
 database_url: "postgres://postgres:postgres@pg:{{ database_port }}/{{ database_name }}?sslmode=disable"
