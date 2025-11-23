@@ -5,9 +5,9 @@ services:
       - 5432:5432
     restart: unless-stopped
     environment:
-      POSTGRES_DB: {{ database_name }}
-      POSTGRES_USER: {{ database_user }}
-      POSTGRES_PASSWORD: {{ vault_database_password }}
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
     volumes:
       - db:/var/lib/postgresql/data
       - "{{ db_dump_folder }}:/var/db_dumps"
@@ -22,6 +22,7 @@ services:
       - LineOAuth__ClientId
       - LineOAuth__ClientSecret
       - LineOAuth__CallbackUrl
+      - ConnectionStrings__AppDbContext
       - PORT
 
     logging:
