@@ -24,7 +24,7 @@ module "pipeline" {
   base_name = "${var.project_name}-${each.key}-docker"
 
   github_connection_arn = aws_codestarconnections_connection.github.arn
-  git_repo_name         = "FuFoodTW/FuFood"
+  git_repo_name         = "FuFoodTW/FuFoodAPI"
   git_branch            = each.key
   deployment_group_name = "${var.project_name}-${each.key}"
   aws_region            = var.aws_region
